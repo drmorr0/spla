@@ -20,6 +20,7 @@ SpMat::SpMat(const SpMatData& data) :
 	mCInd = new size_t[nCols];
 	size_t pos = 0;
 	size_t col = 0;
+	mCInd[col] = 0;
 
 	// Data should be inserted in the correct order, since we're using a custom
 	// sort function for the map, so now we just have to traverse the elements
@@ -63,7 +64,7 @@ SpMatData SpMat::data() const
 	SpMatData data;
 	for (size_t i = 0; i < nNonZero; ++i)
 	{
-		while (mCInd[col] == i) ++col;
+		while (col < nCols && mCInd[col] == i) ++col;
 		data[{mRInd[i], col-1}] = mData[i];
 	}
 	return data;

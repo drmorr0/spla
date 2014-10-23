@@ -4,12 +4,12 @@
 /*
  * spmat.h: (c) David R. Morrison, 2014
  *
- * A (naive) sparse matrix implementation.  Most LP solvers that I've seen use a column-indexed
- * sparse matrix representation.  I'm not really sure why they choose this, but I'm going to go with
- * it since I figure they must know what they're doing.
+ * A (naive) sparse matrix implementation.  Since we want this to be lightning-fast, we're going to
+ * handle all of our own memory allocations.
  *
- * Since we want this to be lightning-fast, we're going to handle all of our own memory allocations.
+ * Data is stored in the so-called "Compressed sparse column" format, described below:
  *
+ *  mData is 
  */
 
 #include "types.h"
