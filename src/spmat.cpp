@@ -18,8 +18,8 @@ SpMat::SpMat(const SpMatData& data) :
 	mData = new double[nNonZero];
 	mRInd = new size_t[nNonZero];
 	mCInd = new size_t[nCols];
-	int pos = 0;
-	int col = -1;
+	size_t pos = 0;
+	size_t col = 0;
 
 	// Data should be inserted in the correct order, since we're using a custom
 	// sort function for the map, so now we just have to traverse the elements
@@ -30,8 +30,9 @@ SpMat::SpMat(const SpMatData& data) :
 
 		mRInd[pos] = i->first.first;
 		mData[pos] = i->second;
-		if (i->first.second != col)
+		while (i->first.second != col)
 			mCInd[++col] = pos;
+		++pos;
 	}
 }
 
@@ -44,9 +45,9 @@ SpMat::SpMat(const SpMat& mat) :
 	mRInd = new size_t[nNonZero];
 	mCInd = new size_t[nCols];
 
-	memcpy(mData, mat.mData, nNonZero);
-	memcpy(mRInd, mat.mRInd, nNonZero);
-	memcpy(mCInd, mat.mCInd, nCols);
+	memcpy(mData, mat.mData, sizeof(size_t) * nNonZero);
+	memcpy(mRInd, mat.mRInd, sizeof(size_t) * nNonZero);
+	memcpy(mCInd, mat.mCInd, sizeof(size_t) * nCols);
 }
 
 SpMat::~SpMat()
@@ -54,6 +55,18 @@ SpMat::~SpMat()
 	delete[] mData;
 	delete[] mRInd;
 	delete[] mCInd;
+}
+
+SpMatData SpMat::data() const
+{
+	size_t col = 0;
+	SpMatData data;
+	for (size_t i = 0; i < nNonZero; ++i)
+	{
+		while (mCInd[col] == i) ++col;
+		data[{mRInd[i], col-1}] = mData[i];
+	}
+	return data;
 }
 
 };

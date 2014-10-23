@@ -6,17 +6,17 @@
 
 #include "spmat.h"
 
-#include <cstdio>
+#include <unittest++/UnitTest++.h>
 
 using namespace std;
 using namespace spla;
 
 const int rows = 1000;
 const int cols = 1000;
-const double valmax = 100;
+const double valmax = 99;
 const double sparsity = 0.1;
 
-int main(int argc, char* argv[])
+TEST(MatrixConstruction)
 {
 	SpMatData my_data;
 	srand48(time(nullptr));
@@ -25,7 +25,13 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < rows; ++i)
 		for (int j = 0; j < cols; ++j)
 			if (drand48() < sparsity)
-				my_data[{i, j}] = drand48() * valmax;
+				my_data[{i, j}] = (int)(drand48() * valmax + 1);
 
 	SpMat test_matrix(my_data);
+	CHECK(my_data == test_matrix.data());
+}
+
+int main(int argc, char* argv[])
+{
+	return UnitTest::RunAllTests();
 }

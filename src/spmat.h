@@ -24,6 +24,8 @@ public:
 	SpMat(const SpMat&);
 	~SpMat();
 
+	SpMatData data() const;
+
 private:
 	double* mData;
 	size_t* mRInd;

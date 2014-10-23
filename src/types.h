@@ -24,7 +24,7 @@ struct DataComp
 	}
 };
 
-typedef std::map<std::pair<int,int>, double, DataComp> SpMatData;
+typedef std::map<std::pair<size_t,size_t>, double, DataComp> SpMatData;
 
 };
 
