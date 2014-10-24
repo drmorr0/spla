@@ -24,13 +24,18 @@ namespace spla
 
 class SpMat
 {
+	friend SpVec operator*(const SpMat&, const SpVec&);
+
 public:
-	SpMat(const SpMatData& data);
+	SpMat(int rows, int cols, const SpMatData& data);
 	SpMat(const SpMat& mat);
 	SpMat& operator=(SpMat mat);
 	~SpMat();
 
 	SpMatData data() const;
+	size_t rows() const { return nRows; }
+	size_t cols() const { return nCols; }
+	size_t nz() const { return nNonZero; }
 
 private:
 	double* mData;
@@ -40,6 +45,9 @@ private:
 	size_t nRows;
 	size_t nCols;
 	size_t nNonZero;	
+
+	void findNextColStart(size_t& curr) const
+		{ while (curr < nCols && mCInd[curr] == nNonZero + 1) ++curr; }
 };
 
 };

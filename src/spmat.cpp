@@ -12,17 +12,17 @@ namespace spla
 
 // Constructor: Take in a pair-indexed map of the non-zero elements, and convert them
 // into the appropriate format
-SpMat::SpMat(const SpMatData& data) :
-	nRows((--data.end())->first.first + 1),		// The last element tells us how many rows and cols
-	nCols((--data.end())->first.second + 1),
+SpMat::SpMat(int rows, int cols, const SpMatData& data) :
+	nRows(rows),		// The last element tells us how many rows and cols
+	nCols(cols),
 	nNonZero(data.size())
 {
 	mData = new double[nNonZero];
 	mRInd = new size_t[nNonZero];
 	mCInd = new size_t[nCols];
+	for (size_t i = 0; i < nCols; ++i) mCInd[i] = nNonZero + 1;
+
 	size_t pos = 0;
-	size_t col = 0;
-	mCInd[col] = 0;
 
 	// Data should be inserted in the correct order, since we're using a custom
 	// sort function for the map, so now we just have to traverse the elements
@@ -35,8 +35,8 @@ SpMat::SpMat(const SpMatData& data) :
 		mData[pos] = i->second;
 
 		// Empty columns all "start" at the same index as the next non-empty column
-		while (i->first.second != col)
-			mCInd[++col] = pos;
+		if (mCInd[i->first.second] == nNonZero + 1)
+			mCInd[i->first.second] = pos;
 		++pos;
 	}
 }
@@ -82,13 +82,20 @@ SpMat::~SpMat()
 // Convert the internal data into a pair-indexed map of elements
 SpMatData SpMat::data() const
 {
-	size_t col = 0;
 	SpMatData data;
+	size_t currCol = 0; findNextColStart(currCol);
+	size_t nextCol = currCol + 1; findNextColStart(nextCol);
+
 	for (size_t i = 0; i < nNonZero; ++i)
 	{
-		while (col < nCols && mCInd[col] == i) ++col;
-		data[{mRInd[i], col-1}] = mData[i];
+		if (nextCol < nCols && i == mCInd[nextCol])
+		{
+			currCol = nextCol;
+			findNextColStart(++nextCol);
+		}
+		data[{mRInd[i], currCol}] = mData[i];
 	}
+
 	return data;
 }
 

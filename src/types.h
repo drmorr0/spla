@@ -7,6 +7,7 @@
  * Miscellaneous types for the spase matrix library
  */
 
+#include <vector>
 #include <utility>
 #include <map>
 
@@ -25,6 +26,7 @@ struct DataComp
 };
 
 typedef std::map<std::pair<size_t,size_t>, double, DataComp> SpMatData;
+typedef std::vector<double> SpVec;
 
 };
 
