@@ -10,8 +10,10 @@ using namespace std;
 namespace spla
 {
 
+// Constructor: Take in a pair-indexed map of the non-zero elements, and convert them
+// into the appropriate format
 SpMat::SpMat(const SpMatData& data) :
-	nRows((--data.end())->first.first + 1),
+	nRows((--data.end())->first.first + 1),		// The last element tells us how many rows and cols
 	nCols((--data.end())->first.second + 1),
 	nNonZero(data.size())
 {
@@ -31,12 +33,15 @@ SpMat::SpMat(const SpMatData& data) :
 
 		mRInd[pos] = i->first.first;
 		mData[pos] = i->second;
+
+		// Empty columns all "start" at the same index as the next non-empty column
 		while (i->first.second != col)
 			mCInd[++col] = pos;
 		++pos;
 	}
 }
 
+// Copy constructor: pretty straightforward, just deep-copy the data
 SpMat::SpMat(const SpMat& mat) :
 	nRows(mat.nRows),
 	nCols(mat.nCols),
@@ -51,6 +56,10 @@ SpMat::SpMat(const SpMat& mat) :
 	memcpy(mCInd, mat.mCInd, sizeof(size_t) * nCols);
 }
 
+// operator=: This is a partial copy-and-swap; since we're just throwing away the temporary guy,
+// there's no reason to swap my data with his.  The annoying thing is that if new members get added
+// to SpMat, we have to remember to add them here.  Maybe worth pulling out into a proper swap
+// function sometime?
 SpMat& SpMat::operator=(SpMat mat)
 {
 	nRows = mat.nRows;
@@ -62,6 +71,7 @@ SpMat& SpMat::operator=(SpMat mat)
 	return *this;
 }
 
+// Destructor: clean up our mess
 SpMat::~SpMat()
 {
 	delete[] mData;
@@ -69,6 +79,7 @@ SpMat::~SpMat()
 	delete[] mCInd;
 }
 
+// Convert the internal data into a pair-indexed map of elements
 SpMatData SpMat::data() const
 {
 	size_t col = 0;
