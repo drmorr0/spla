@@ -28,7 +28,9 @@ TEST(MatrixConstruction)
 				my_data[{i, j}] = (int)(drand48() * valmax + 1);
 
 	SpMat test_matrix(my_data);
+	SpMat test_matrix_2 = test_matrix;
 	CHECK(my_data == test_matrix.data());
+	CHECK(my_data == test_matrix_2.data());
 }
 
 int main(int argc, char* argv[])

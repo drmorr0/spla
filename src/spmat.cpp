@@ -51,6 +51,17 @@ SpMat::SpMat(const SpMat& mat) :
 	memcpy(mCInd, mat.mCInd, sizeof(size_t) * nCols);
 }
 
+SpMat& SpMat::operator=(SpMat mat)
+{
+	nRows = mat.nRows;
+	nCols = mat.nCols;
+	nNonZero = mat.nNonZero;
+	mData = mat.mData;
+	mRInd = mat.mRInd;
+	mCInd = mat.mCInd;
+	return *this;
+}
+
 SpMat::~SpMat()
 {
 	delete[] mData;
