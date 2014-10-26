@@ -13,12 +13,18 @@ namespace spla
 // Constructor: Take in a pair-indexed map of the non-zero elements, and convert them
 // into the appropriate format
 SpMat::SpMat(int rows, int cols, const SpMatData& data) :
-	nRows(rows),		// The last element tells us how many rows and cols
+	mData(nullptr),
+	mRInd(nullptr),
+	mCInd(nullptr),
+	nRows(rows),		
 	nCols(cols),
 	nNonZero(data.size())
 {
-	mData = new double[nNonZero];
-	mRInd = new size_t[nNonZero];
+	if (nNonZero > 0)
+	{
+		mData = new double[nNonZero];
+		mRInd = new size_t[nNonZero];
+	}
 	mCInd = new size_t[nCols];
 	for (size_t i = 0; i < nCols; ++i) mCInd[i] = nNonZero + 1;
 
@@ -56,10 +62,8 @@ SpMat::SpMat(const SpMat& mat) :
 	memcpy(mCInd, mat.mCInd, sizeof(size_t) * nCols);
 }
 
-// operator=: This is a partial copy-and-swap; since we're just throwing away the temporary guy,
-// there's no reason to swap my data with his.  The annoying thing is that if new members get added
-// to SpMat, we have to remember to add them here.  Maybe worth pulling out into a proper swap
-// function sometime?
+// operator=: We use a semi-copy-and-swap technique here.  It's a bit of a hack, but I don't 
+// really care right now
 SpMat& SpMat::operator=(SpMat mat)
 {
 	nRows = mat.nRows;
@@ -68,15 +72,20 @@ SpMat& SpMat::operator=(SpMat mat)
 	mData = mat.mData;
 	mRInd = mat.mRInd;
 	mCInd = mat.mCInd;
+
+	// Make sure that our data doesn't get deleted when the other guy goes out of scope
+	mat.mData = nullptr;
+	mat.mRInd = nullptr;
+	mat.mCInd = nullptr;
 	return *this;
 }
 
 // Destructor: clean up our mess
 SpMat::~SpMat()
 {
-	delete[] mData;
-	delete[] mRInd;
-	delete[] mCInd;
+	if (mData) delete[] mData;
+	if (mRInd) delete[] mRInd;
+	if (mCInd) delete[] mCInd;
 }
 
 // Convert the internal data into a pair-indexed map of elements

@@ -25,8 +25,10 @@ namespace spla
 class SpMat
 {
 	friend SpVec operator*(const SpMat&, const SpVec&);
+	friend SpMat operator*(const SpMat&, const SpMat&);
 
 public:
+	SpMat() : nRows(0), nCols(0), nNonZero(0) { }
 	SpMat(int rows, int cols, const SpMatData& data);
 	SpMat(const SpMat& mat);
 	SpMat& operator=(SpMat mat);
