@@ -12,8 +12,8 @@
 using namespace std;
 using namespace spla;
 
-const int rows = 1000;
-const int cols = 1000;
+const int rows = 100;
+const int cols = 100;
 const double valmax = 99;
 const double sparsity = 0.1;
 

@@ -40,49 +40,53 @@ SpMat operator*(const SpMat& m1, const SpMat& m2)
 
 	size_t m2ccol = 0; m2.findNextColStart(m2ccol);
 	size_t m2ncol = m2ccol + 1; m2.findNextColStart(m2ncol);
+	size_t m2nind = m2ncol < m2.nCols ? m2.mCInd[m2ncol] : m2.nNonZero;
 	vector<bool> emptyCols(out.nCols, true);
 	
-	while (m2ccol < out.nCols)
+	SpVec outCol(m1.nRows, 0);
+	for (size_t j = 0; j < m2.nNonZero + 1; ++j)
 	{
-		size_t m2nind = m2ncol < m2.nCols ? m2.mCInd[m2ncol] : m2.nNonZero;
-		SpVec outCol(m1.nRows, 0);
-		for (size_t j = m2.mCInd[m2ccol]; j < m2nind; ++j)
+		if (j == m2nind)
 		{
-			size_t m1ccol = m2.mRInd[j]; 
-			size_t m1ncol = m1ccol + 1; m1.findNextColStart(m1ncol);
-			size_t m1nind = m1ncol < m1.nCols ? m1.mCInd[m1ncol] : m1.nNonZero;
-
-			for (size_t i = m1.mCInd[m1ccol]; i < m1nind; ++i)
-				outCol[m1.mRInd[i]] += m1.mData[i] * m2.mData[j];
-		}
-
-		size_t colStartInd = 0;
-		for (size_t i = 0; i < outCol.size(); ++i)
-		{
-			if (outCol[i] > Tolerance)
+			size_t colStartInd = 0;
+			for (size_t i = 0; i < outCol.size(); ++i)
 			{
-				if (emptyCols[m2ccol]) colStartInd = outnzpos;
-				emptyCols[m2ccol] = false;
-
-				if (outnzpos >= outnz - 1)
+				if (outCol[i] > Tolerance)
 				{
-					outnz *= 2; 
-					double* dataRealloc = new double[outnz];
-					size_t* rindRealloc = new size_t[outnz];
-					memcpy(dataRealloc, out.mData, sizeof(double) * outnzpos);
-					memcpy(rindRealloc, out.mRInd, sizeof(size_t) * outnzpos);
-					delete[] out.mData; delete[] out.mRInd;
-					out.mData = dataRealloc; out.mRInd = rindRealloc;
-				}
+					if (emptyCols[m2ccol]) colStartInd = outnzpos;
+					emptyCols[m2ccol] = false;
 
-				out.mData[outnzpos] = outCol[i];
-				out.mRInd[outnzpos] = i;
-				++(out.nNonZero);
-				++outnzpos;
+					if (outnzpos >= outnz - 1)
+					{
+						outnz *= 2; 
+						double* dataRealloc = new double[outnz];
+						size_t* rindRealloc = new size_t[outnz];
+						memcpy(dataRealloc, out.mData, sizeof(double) * outnzpos);
+						memcpy(rindRealloc, out.mRInd, sizeof(size_t) * outnzpos);
+						delete[] out.mData; delete[] out.mRInd;
+						out.mData = dataRealloc; out.mRInd = rindRealloc;
+					}
+
+					out.mData[outnzpos] = outCol[i];
+					out.mRInd[outnzpos] = i;
+					++(out.nNonZero);
+					++outnzpos;
+				}
 			}
+			if (!emptyCols[m2ccol]) out.mCInd[m2ccol] = colStartInd;
+			if (j == m2.nNonZero) break;
+
+			m2ccol = m2ncol; m2ncol = m2ccol + 1; m2.findNextColStart(m2ncol);
+			m2nind = m2ncol < m2.nCols ? m2.mCInd[m2ncol] : m2.nNonZero;
+			outCol.clear(); outCol.resize(m1.nRows, 0);
 		}
-		if (!emptyCols[m2ccol]) out.mCInd[m2ccol] = colStartInd;
-		m2ccol = m2ncol; m2ncol = m2ccol + 1; m2.findNextColStart(m2ncol);
+
+		size_t m1ccol = m2.mRInd[j]; 
+		size_t m1ncol = m1ccol + 1; m1.findNextColStart(m1ncol);
+		size_t m1nind = m1ncol < m1.nCols ? m1.mCInd[m1ncol] : m1.nNonZero;
+
+		for (size_t i = m1.mCInd[m1ccol]; i < m1nind; ++i)
+			outCol[m1.mRInd[i]] += m1.mData[i] * m2.mData[j];
 	}
 
 	for (size_t i = 0; i < emptyCols.size(); ++i)
