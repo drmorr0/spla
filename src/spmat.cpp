@@ -14,7 +14,7 @@ namespace spla
 // into the appropriate format
 SpMat::SpMat(int rows, int cols, const SpMatData& data) :
 	mData(nullptr),
-	mRInd(nullptr),
+	mRow(nullptr),
 	mCInd(nullptr),
 	nRows(rows),		
 	nCols(cols),
@@ -23,10 +23,10 @@ SpMat::SpMat(int rows, int cols, const SpMatData& data) :
 	if (nNonZero > 0)
 	{
 		mData = new double[nNonZero];
-		mRInd = new size_t[nNonZero];
+		mRow = new size_t[nNonZero];
 	}
-	mCInd = new size_t[nCols];
-	for (size_t i = 0; i < nCols; ++i) mCInd[i] = nNonZero + 1;
+	mCInd = new size_t[nCols + 1];
+	for (size_t i = 0; i < nCols + 1; ++i) mCInd[i] = nNonZero;
 
 	size_t pos = 0;
 
@@ -37,11 +37,11 @@ SpMat::SpMat(int rows, int cols, const SpMatData& data) :
 		// Ignore zeros
 		if (fabs(i->second) < Tolerance) continue;
 
-		mRInd[pos] = i->first.first;
+		mRow[pos] = i->first.first;
 		mData[pos] = i->second;
 
 		// Empty columns all "start" at the same index as the next non-empty column
-		if (mCInd[i->first.second] == nNonZero + 1)
+		if (mCInd[i->first.second] == nNonZero)
 			mCInd[i->first.second] = pos;
 		++pos;
 	}
@@ -54,12 +54,12 @@ SpMat::SpMat(const SpMat& mat) :
 	nNonZero(mat.nNonZero)
 {
 	mData = new double[nNonZero];
-	mRInd = new size_t[nNonZero];
-	mCInd = new size_t[nCols];
+	mRow = new size_t[nNonZero];
+	mCInd = new size_t[nCols + 1];
 
 	memcpy(mData, mat.mData, sizeof(size_t) * nNonZero);
-	memcpy(mRInd, mat.mRInd, sizeof(size_t) * nNonZero);
-	memcpy(mCInd, mat.mCInd, sizeof(size_t) * nCols);
+	memcpy(mRow, mat.mRow, sizeof(size_t) * nNonZero);
+	memcpy(mCInd, mat.mCInd, sizeof(size_t) * (nCols + 1));
 }
 
 // operator=: We use a semi-copy-and-swap technique here.  It's a bit of a hack, but I don't 
@@ -70,12 +70,12 @@ SpMat& SpMat::operator=(SpMat mat)
 	nCols = mat.nCols;
 	nNonZero = mat.nNonZero;
 	mData = mat.mData;
-	mRInd = mat.mRInd;
+	mRow = mat.mRow;
 	mCInd = mat.mCInd;
 
 	// Make sure that our data doesn't get deleted when the other guy goes out of scope
 	mat.mData = nullptr;
-	mat.mRInd = nullptr;
+	mat.mRow = nullptr;
 	mat.mCInd = nullptr;
 	return *this;
 }
@@ -84,7 +84,7 @@ SpMat& SpMat::operator=(SpMat mat)
 SpMat::~SpMat()
 {
 	if (mData) delete[] mData;
-	if (mRInd) delete[] mRInd;
+	if (mRow) delete[] mRow;
 	if (mCInd) delete[] mCInd;
 }
 
@@ -92,17 +92,18 @@ SpMat::~SpMat()
 SpMatData SpMat::data() const
 {
 	SpMatData data;
-	size_t currCol = 0; findNextColStart(currCol);
-	size_t nextCol = currCol + 1; findNextColStart(nextCol);
+	size_t currCol = 0; nextc(currCol);
+	size_t nextCol = currCol + 1; 
+	size_t nextCInd = nextc(nextCol);
 
 	for (size_t i = 0; i < nNonZero; ++i)
 	{
-		if (nextCol < nCols && i == mCInd[nextCol])
+		if (i == nextCInd)
 		{
 			currCol = nextCol;
-			findNextColStart(++nextCol);
+			nextCInd = nextc(++nextCol);
 		}
-		data[{mRInd[i], currCol}] = mData[i];
+		data[{mRow[i], currCol}] = mData[i];
 	}
 
 	return data;

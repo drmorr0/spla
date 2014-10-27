@@ -12,8 +12,8 @@
 using namespace std;
 using namespace spla;
 
-const int rows = 100;
-const int cols = 100;
+int rows = 100;
+int cols = 100;
 const double valmax = 99;
 const double sparsity = 0.1;
 
@@ -122,6 +122,9 @@ TEST(MatMatMultiply)
 int main(int argc, char* argv[])
 {
 	int seed = time(nullptr);
+	if (argc > 1) seed = stoi(argv[1]);
+	if (argc > 2) rows = stoi(argv[2]);
+	if (argc > 3) cols = stoi(argv[3]);
 	printf("RANDOM SEED: %d\n", seed);
 	srand48(seed);
 
